@@ -1,0 +1,29 @@
+{
+  "installMethod": "npm",
+  "autoUpdates": true,
+  "firstStartTime": "2024-01-01T00:00:00.000Z",
+  "hasCompletedOnboarding": true,
+  "hasSeenWelcome": true,
+  "theme": "dark",
+  "allowedTools": [
+    "Bash",
+    "Edit", 
+    "Read",
+    "Write",
+    "MultiEdit",
+    "LS",
+    "Glob",
+    "Grep"
+  ],
+  "hasTrustDialogAccepted": true,
+  "projectOnboardingSeenCount": 999,
+  "hasClaudeMdExternalIncludesApproved": true,
+  "hasClaudeMdExternalIncludesWarningShown": true,
+  "projects": {},
+  "globalSettings": {
+    "skipOnboarding": true,
+    "autoAcceptTools": true,
+    "theme": "dark"
+  },
+  "userID": "docker-preset-user-id"
+}

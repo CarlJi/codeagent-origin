@@ -63,6 +63,9 @@ RUN chmod +x /usr/local/bin/codeagent-github-mcp-server
 # 切换用户
 USER codeagent
 
+# 预配置 Claude Code 以跳过初始化过程
+COPY .claude.json /home/codeagent/.claude.json
+
 # 设置工作目录
 WORKDIR /workspace
 
