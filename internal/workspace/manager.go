@@ -187,10 +187,12 @@ func (m *Manager) CreateWorkspaceFromPR(pr *github.PullRequest, aiModel string) 
 	}
 
 	// Check if this is a fork repository PR
+	isForkPR := m.isForkRepositoryPR(pr)
+
 	// Always use base branch for cloning, then fetch PR content using GitHub PR refs
 	// This ensures consistency and reliability regardless of fork status
 	cloneBranch := pr.GetBase().GetRef()
-	log.Infof("PR #%d: using base branch '%s' for cloning, will fetch PR content via GitHub refs", pr.GetNumber(), cloneBranch)
+	log.Infof("PR #%d (fork=%v): using base branch '%s' for cloning, will fetch PR content via GitHub refs", pr.GetNumber(), isForkPR, cloneBranch)
 
 	// Generate PR workspace directory name with AI model information
 	timestamp := time.Now().Unix()
@@ -213,17 +215,26 @@ func (m *Manager) CreateWorkspaceFromPR(pr *github.PullRequest, aiModel string) 
 		return nil
 	}
 
-	// Fetch and checkout PR content for all PRs using GitHub PR refs
-	// This ensures we always have the exact PR content regardless of cache sync
+	// Fetch and checkout PR content using GitHub PR refs
+	// For non-fork PRs, use the original branch name to enable direct push
+	// For fork PRs, use a generic PR branch name
 	actualBranch := cloneBranch
-	log.Infof("Fetching PR #%d content using GitHub PR refs", pr.GetNumber())
+	var targetBranch string
+	if isForkPR {
+		// Fork PR: use generic branch name since we can't push back to fork
+		targetBranch = fmt.Sprintf("pr-%d", pr.GetNumber())
+		log.Infof("Fork PR #%d: fetching to generic branch '%s'", pr.GetNumber(), targetBranch)
+	} else {
+		// Non-fork PR: use original branch name to enable direct push
+		targetBranch = pr.GetHead().GetRef()
+		log.Infof("Non-fork PR #%d: fetching to original branch '%s' for direct push capability", pr.GetNumber(), targetBranch)
+	}
 
-	if err := m.gitService.FetchAndCheckoutPR(clonePath, pr.GetNumber()); err != nil {
+	if err := m.gitService.FetchAndCheckoutPR(clonePath, pr.GetNumber(), targetBranch); err != nil {
 		log.Errorf("Failed to fetch PR content for PR #%d: %v", pr.GetNumber(), err)
 		// Don't fail completely, but log the error - the base branch clone still works
 	} else {
-		// Update the actual branch to the PR branch we checked out
-		actualBranch = fmt.Sprintf("pr-%d", pr.GetNumber())
+		actualBranch = targetBranch
 		log.Infof("Successfully fetched PR content, workspace is now on branch: %s", actualBranch)
 	}
 
@@ -769,7 +780,8 @@ func (m *Manager) syncPRContentIfStale(ws *models.Workspace, pr *github.PullRequ
 	log.Infof("Force syncing PR #%d content in workspace to ensure it's up to date: %s", pr.GetNumber(), ws.Path)
 
 	// Force fetch and checkout PR content to handle any updates/force pushes
-	if err := m.gitService.FetchAndCheckoutPR(ws.Path, pr.GetNumber()); err != nil {
+	// Use the workspace's current branch name to maintain consistency
+	if err := m.gitService.FetchAndCheckoutPR(ws.Path, pr.GetNumber(), ws.Branch); err != nil {
 		return fmt.Errorf("failed to force sync PR content: %w", err)
 	}
 

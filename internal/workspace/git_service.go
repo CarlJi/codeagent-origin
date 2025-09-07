@@ -23,7 +23,7 @@ type GitService interface {
 	CreateAndCheckoutBranch(repoPath, branchName string) error
 	CheckoutBranch(repoPath, branchName string) error
 	CreateTrackingBranch(repoPath, branchName string) error
-	FetchAndCheckoutPR(repoPath string, prNumber int) error
+	FetchAndCheckoutPR(repoPath string, prNumber int, targetBranch string) error
 }
 
 type gitService struct{}
@@ -44,7 +44,7 @@ func (g *gitService) CloneRepository(repoURL, clonePath, branch string, createNe
 
 	// Clone the repository with full history
 	var cmd *exec.Cmd
-	if createNewBranch {
+	if createNewBranch || branch == "" {
 		// Clone the default branch first, then create new branch
 		cmd = exec.Command("git", "clone", repoURL, clonePath)
 		log.Infof("Executing Git command: %s", cmd.String())
@@ -257,15 +257,13 @@ func (g *gitService) CreateTrackingBranch(repoPath, branchName string) error {
 
 // FetchAndCheckoutPR fetches and checks out PR content using GitHub's PR refs
 // Always uses force mode to handle updates, force pushes, and ensure latest content
-func (g *gitService) FetchAndCheckoutPR(repoPath string, prNumber int) error {
-	log.Infof("Fetching PR #%d content using GitHub PR refs (force mode)", prNumber)
-
-	prBranchName := fmt.Sprintf("pr-%d", prNumber)
+func (g *gitService) FetchAndCheckoutPR(repoPath string, prNumber int, targetBranch string) error {
+	log.Infof("Fetching PR #%d content using GitHub PR refs to branch '%s' (force mode)", prNumber, targetBranch)
 	currentBranch, err := g.GetCurrentBranch(repoPath)
 
-	// If we're already on the PR branch, use a lightweight in-place update
-	if err == nil && currentBranch == prBranchName {
-		log.Infof("Already on PR branch %s, performing in-place sync", prBranchName)
+	// If we're already on the target branch, use a lightweight in-place update
+	if err == nil && currentBranch == targetBranch {
+		log.Infof("Already on target branch %s, performing in-place sync", targetBranch)
 
 		// Step 1: First fetch the PR content to FETCH_HEAD without creating/updating local branch
 		fetchCmd := exec.Command("git", "fetch", "origin", fmt.Sprintf("pull/%d/head", prNumber))
@@ -289,7 +287,7 @@ func (g *gitService) FetchAndCheckoutPR(repoPath string, prNumber int) error {
 		return nil
 	}
 
-	fetchCmd := exec.Command("git", "fetch", "origin", fmt.Sprintf("pull/%d/head:%s", prNumber, prBranchName), "--force")
+	fetchCmd := exec.Command("git", "fetch", "origin", fmt.Sprintf("pull/%d/head:%s", prNumber, targetBranch), "--force")
 	fetchCmd.Dir = repoPath
 	log.Infof("Executing Git command: %s", fetchCmd.String())
 	if output, err := fetchCmd.CombinedOutput(); err != nil {
@@ -297,14 +295,14 @@ func (g *gitService) FetchAndCheckoutPR(repoPath string, prNumber int) error {
 		return fmt.Errorf("failed to fetch PR #%d: %w, output: %s", prNumber, err, string(output))
 	}
 
-	checkoutCmd := exec.Command("git", "checkout", prBranchName)
+	checkoutCmd := exec.Command("git", "checkout", targetBranch)
 	checkoutCmd.Dir = repoPath
 	log.Infof("Executing Git command: %s", checkoutCmd.String())
 	if output, err := checkoutCmd.CombinedOutput(); err != nil {
 		log.Errorf("Git command failed: %s, output: %s, error: %v", checkoutCmd.String(), string(output), err)
-		return fmt.Errorf("failed to checkout PR branch %s: %w, output: %s", prBranchName, err, string(output))
+		return fmt.Errorf("failed to checkout target branch %s: %w, output: %s", targetBranch, err, string(output))
 	}
 
-	log.Infof("Successfully fetched and checked out PR #%d content to branch: %s", prNumber, prBranchName)
+	log.Infof("Successfully fetched and checked out PR #%d content to branch: %s", prNumber, targetBranch)
 	return nil
 }
