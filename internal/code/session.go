@@ -23,8 +23,11 @@ func NewSessionManager(cfg *config.Config) *SessionManager {
 
 // GetSession retrieves an existing Code session or creates a new one.
 func (sm *SessionManager) GetSession(workspace *models.Workspace) (Code, error) {
-	// 新的session key包含AI模型信息：aimodel-org-repo-pr-number
-	key := fmt.Sprintf("%s-%s-%s-%d", workspace.AIModel, workspace.Org, workspace.Repo, workspace.PRNumber)
+	// Generate session key based on workspace type
+	key := sm.generateSessionKey(workspace)
+	if key == "" {
+		return nil, fmt.Errorf("failed to generate session key: workspace has neither PRNumber nor Issue")
+	}
 	sm.mu.RLock()
 	c, ok := sm.codes[key]
 	sm.mu.RUnlock()
@@ -53,12 +56,29 @@ func (sm *SessionManager) GetSession(workspace *models.Workspace) (Code, error) 
 func (sm *SessionManager) CloseSession(workspace *models.Workspace) error {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
-	// 新的session key包含AI模型信息：aimodel-org-repo-pr-number
-	key := fmt.Sprintf("%s-%s-%s-%d", workspace.AIModel, workspace.Org, workspace.Repo, workspace.PRNumber)
+	// Generate session key based on workspace type
+	key := sm.generateSessionKey(workspace)
+	if key == "" {
+		return fmt.Errorf("failed to generate session key: workspace has neither PRNumber nor Issue")
+	}
 
 	if c, ok := sm.codes[key]; ok {
 		delete(sm.codes, key)
 		return c.Close()
 	}
 	return nil
+}
+
+// generateSessionKey generates a unique session key based on workspace type
+func (sm *SessionManager) generateSessionKey(workspace *models.Workspace) string {
+	if workspace.PRNumber > 0 {
+		// For PRs: aimodel-org-repo-pr-number
+		return fmt.Sprintf("%s-%s-%s-pr-%d", workspace.AIModel, workspace.Org, workspace.Repo, workspace.PRNumber)
+	} else if workspace.Issue != nil {
+		// For Issues: aimodel-org-repo-issue-number
+		return fmt.Sprintf("%s-%s-%s-issue-%d", workspace.AIModel, workspace.Org, workspace.Repo, workspace.Issue.GetNumber())
+	} else {
+		// No fallback: return empty string to indicate error
+		return ""
+	}
 }
