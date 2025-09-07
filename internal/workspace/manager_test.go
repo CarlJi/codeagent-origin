@@ -798,7 +798,7 @@ func (m *mockGitService) CreateTrackingBranch(repoPath, branchName string) error
 	return nil
 }
 
-func (m *mockGitService) FetchAndCheckoutPR(repoPath string, prNumber int) error {
+func (m *mockGitService) FetchAndCheckoutPR(repoPath string, prNumber int, targetBranch string) error {
 	// Mock implementation for testing
 	return nil
 }
