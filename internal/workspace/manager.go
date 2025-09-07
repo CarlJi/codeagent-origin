@@ -187,19 +187,10 @@ func (m *Manager) CreateWorkspaceFromPR(pr *github.PullRequest, aiModel string) 
 	}
 
 	// Check if this is a fork repository PR
-	isForkPR := m.isForkRepositoryPR(pr)
-
-	// Get appropriate branch for cloning
-	var cloneBranch string
-	if isForkPR {
-		// For fork repository PRs, use the base branch (main branch of target repository)
-		cloneBranch = pr.GetBase().GetRef()
-		log.Infof("Detected fork repository PR #%d, using base branch '%s' for cloning", pr.GetNumber(), cloneBranch)
-	} else {
-		// For same repository PRs, use the head branch
-		cloneBranch = pr.GetHead().GetRef()
-		log.Infof("Same repository PR #%d, using head branch '%s' for cloning", pr.GetNumber(), cloneBranch)
-	}
+	// Always use base branch for cloning, then fetch PR content using GitHub PR refs
+	// This ensures consistency and reliability regardless of fork status
+	cloneBranch := pr.GetBase().GetRef()
+	log.Infof("PR #%d: using base branch '%s' for cloning, will fetch PR content via GitHub refs", pr.GetNumber(), cloneBranch)
 
 	// Generate PR workspace directory name with AI model information
 	timestamp := time.Now().Unix()
@@ -222,19 +213,18 @@ func (m *Manager) CreateWorkspaceFromPR(pr *github.PullRequest, aiModel string) 
 		return nil
 	}
 
-	// For fork PRs, fetch and checkout the PR content after cloning
-	var actualBranch = cloneBranch
-	if isForkPR {
-		log.Infof("Fork PR detected, fetching PR #%d content using GitHub PR refs", pr.GetNumber())
+	// Fetch and checkout PR content for all PRs using GitHub PR refs
+	// This ensures we always have the exact PR content regardless of cache sync
+	actualBranch := cloneBranch
+	log.Infof("Fetching PR #%d content using GitHub PR refs", pr.GetNumber())
 
-		if err := m.gitService.FetchAndCheckoutPR(clonePath, pr.GetNumber()); err != nil {
-			log.Errorf("Failed to fetch fork PR content for PR #%d: %v", pr.GetNumber(), err)
-			// Don't fail completely, but log the error - the base branch clone still works
-		} else {
-			// Update the actual branch to the PR branch we checked out
-			actualBranch = fmt.Sprintf("pr-%d", pr.GetNumber())
-			log.Infof("Successfully fetched fork PR content, workspace is now on branch: %s", actualBranch)
-		}
+	if err := m.gitService.FetchAndCheckoutPR(clonePath, pr.GetNumber()); err != nil {
+		log.Errorf("Failed to fetch PR content for PR #%d: %v", pr.GetNumber(), err)
+		// Don't fail completely, but log the error - the base branch clone still works
+	} else {
+		// Update the actual branch to the PR branch we checked out
+		actualBranch = fmt.Sprintf("pr-%d", pr.GetNumber())
+		log.Infof("Successfully fetched PR content, workspace is now on branch: %s", actualBranch)
 	}
 
 	// Create session directory
