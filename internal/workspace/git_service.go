@@ -42,15 +42,15 @@ func (g *gitService) CloneRepository(repoURL, clonePath, branch string, createNe
 		return DirectoryError("clone_prepare", clonePath, err)
 	}
 
-	// Clone the repository with shallow depth for efficiency
+	// Clone the repository with full history
 	var cmd *exec.Cmd
 	if createNewBranch {
 		// Clone the default branch first, then create new branch
-		cmd = exec.Command("git", "clone", "--depth", "50", repoURL, clonePath)
+		cmd = exec.Command("git", "clone", repoURL, clonePath)
 		log.Infof("Executing Git command: %s", cmd.String())
 	} else {
 		// Try to clone specific branch directly
-		cmd = exec.Command("git", "clone", "--depth", "50", "--branch", branch, repoURL, clonePath)
+		cmd = exec.Command("git", "clone", "--branch", branch, repoURL, clonePath)
 		log.Infof("Executing Git command: %s", cmd.String())
 	}
 
@@ -60,7 +60,7 @@ func (g *gitService) CloneRepository(repoURL, clonePath, branch string, createNe
 		if !createNewBranch {
 			// If direct branch clone failed, try cloning default branch first
 			log.Warnf("Failed to clone specific branch %s directly, cloning default branch: %v", branch, err)
-			cmd = exec.Command("git", "clone", "--depth", "50", repoURL, clonePath)
+			cmd = exec.Command("git", "clone", repoURL, clonePath)
 			log.Infof("Executing fallback Git command: %s", cmd.String())
 			output, err = cmd.CombinedOutput()
 			if err != nil {

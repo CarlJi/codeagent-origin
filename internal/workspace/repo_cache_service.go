@@ -59,7 +59,7 @@ func (r *repoCacheService) GetOrCreateCachedRepo(repoURL, org, repo string) (str
 		return "", DirectoryError("create_cache_dir", cachedRepoPath, err)
 	}
 
-	// Clone with full history (not shallow) for cache
+	// Clone with full history for cache
 	if err := r.gitService.CloneRepository(repoURL, cachedRepoPath, "", false); err != nil {
 		// Clean up failed clone
 		os.RemoveAll(cachedRepoPath)
