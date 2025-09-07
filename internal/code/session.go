@@ -25,6 +25,9 @@ func NewSessionManager(cfg *config.Config) *SessionManager {
 func (sm *SessionManager) GetSession(workspace *models.Workspace) (Code, error) {
 	// Generate session key based on workspace type
 	key := sm.generateSessionKey(workspace)
+	if key == "" {
+		return nil, fmt.Errorf("failed to generate session key: workspace has neither PRNumber nor Issue")
+	}
 	sm.mu.RLock()
 	c, ok := sm.codes[key]
 	sm.mu.RUnlock()
@@ -55,6 +58,9 @@ func (sm *SessionManager) CloseSession(workspace *models.Workspace) error {
 	defer sm.mu.Unlock()
 	// Generate session key based on workspace type
 	key := sm.generateSessionKey(workspace)
+	if key == "" {
+		return fmt.Errorf("failed to generate session key: workspace has neither PRNumber nor Issue")
+	}
 
 	if c, ok := sm.codes[key]; ok {
 		delete(sm.codes, key)
@@ -72,8 +78,7 @@ func (sm *SessionManager) generateSessionKey(workspace *models.Workspace) string
 		// For Issues: aimodel-org-repo-issue-number
 		return fmt.Sprintf("%s-%s-%s-issue-%d", workspace.AIModel, workspace.Org, workspace.Repo, workspace.Issue.GetNumber())
 	} else {
-		// Fallback: use timestamp for uniqueness
-		timestamp := workspace.CreatedAt.Unix()
-		return fmt.Sprintf("%s-%s-%s-workspace-%d", workspace.AIModel, workspace.Org, workspace.Repo, timestamp)
+		// No fallback: return empty string to indicate error
+		return ""
 	}
 }

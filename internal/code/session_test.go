@@ -61,7 +61,7 @@ func TestSessionManager_GenerateSessionKey(t *testing.T) {
 			expected: "claude-qiniu-codeagent-issue-456",
 		},
 		{
-			name: "Workspace with timestamp fallback",
+			name: "Invalid workspace returns empty string",
 			workspace: &models.Workspace{
 				AIModel:   "claude",
 				Org:       "qiniu",
@@ -70,7 +70,7 @@ func TestSessionManager_GenerateSessionKey(t *testing.T) {
 				Issue:     nil,
 				CreatedAt: now,
 			},
-			expected: "claude-qiniu-codeagent-workspace-" + string(rune(now.Unix())),
+			expected: "",
 		},
 		{
 			name: "Different AI model",
@@ -88,14 +88,7 @@ func TestSessionManager_GenerateSessionKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			key := sm.generateSessionKey(tt.workspace)
-			if tt.name == "Workspace with timestamp fallback" {
-				// For timestamp fallback, just check the prefix
-				expectedPrefix := "claude-qiniu-codeagent-workspace-"
-				assert.True(t, len(key) > len(expectedPrefix))
-				assert.True(t, key[:len(expectedPrefix)] == expectedPrefix)
-			} else {
-				assert.Equal(t, tt.expected, key)
-			}
+			assert.Equal(t, tt.expected, key)
 		})
 	}
 }
@@ -234,4 +227,49 @@ func TestSessionManager_CloseSession(t *testing.T) {
 	// Test that calling CloseSession on non-existent session doesn't error
 	err := sm.CloseSession(workspace)
 	assert.NoError(t, err, "CloseSession should not error on non-existent session")
+}
+
+func TestSessionManager_GetSessionWithInvalidWorkspace(t *testing.T) {
+	cfg := &config.Config{
+		CodeProvider: "mock",
+	}
+	sm := NewSessionManager(cfg)
+
+	// Create workspace without PR or Issue
+	invalidWorkspace := &models.Workspace{
+		AIModel:   "claude",
+		Org:       "qiniu",
+		Repo:      "codeagent",
+		PRNumber:  0,
+		Issue:     nil,
+		CreatedAt: time.Now(),
+	}
+
+	// GetSession should return error for invalid workspace
+	session, err := sm.GetSession(invalidWorkspace)
+	assert.Error(t, err)
+	assert.Nil(t, session)
+	assert.Contains(t, err.Error(), "failed to generate session key")
+}
+
+func TestSessionManager_CloseSessionWithInvalidWorkspace(t *testing.T) {
+	cfg := &config.Config{
+		CodeProvider: "mock",
+	}
+	sm := NewSessionManager(cfg)
+
+	// Create workspace without PR or Issue
+	invalidWorkspace := &models.Workspace{
+		AIModel:   "claude",
+		Org:       "qiniu",
+		Repo:      "codeagent",
+		PRNumber:  0,
+		Issue:     nil,
+		CreatedAt: time.Now(),
+	}
+
+	// CloseSession should return error for invalid workspace
+	err := sm.CloseSession(invalidWorkspace)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to generate session key")
 }
