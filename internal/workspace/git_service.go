@@ -24,6 +24,10 @@ type GitService interface {
 	CheckoutBranch(repoPath, branchName string) error
 	CreateTrackingBranch(repoPath, branchName string) error
 	FetchAndCheckoutPR(repoPath string, prNumber int, targetBranch string) error
+	// SetRemoteURLWithToken sets remote URL with access token
+	SetRemoteURLWithToken(repoPath, repoURL, token string) error
+	// UpdateRemoteToken updates existing remote URL with new token
+	UpdateRemoteToken(repoPath, newToken string) error
 }
 
 type gitService struct{}
@@ -304,5 +308,86 @@ func (g *gitService) FetchAndCheckoutPR(repoPath string, prNumber int, targetBra
 	}
 
 	log.Infof("Successfully fetched and checked out PR #%d content to branch: %s", prNumber, targetBranch)
+	return nil
+}
+
+// SetRemoteURLWithToken sets the remote URL with an access token
+func (g *gitService) SetRemoteURLWithToken(repoPath, repoURL, token string) error {
+	if token == "" {
+		return fmt.Errorf("access token is required")
+	}
+
+	// Parse the repository URL to extract owner/repo
+	if !strings.Contains(repoURL, "github.com") {
+		return fmt.Errorf("unsupported repository URL format: %s", repoURL)
+	}
+
+	// Convert to token-authenticated URL
+	var tokenURL string
+	if strings.HasPrefix(repoURL, "https://github.com/") {
+		// https://github.com/owner/repo.git -> https://x-access-token:TOKEN@github.com/owner/repo.git
+		tokenURL = strings.Replace(repoURL, "https://github.com/", fmt.Sprintf("https://x-access-token:%s@github.com/", token), 1)
+	} else if strings.HasPrefix(repoURL, "https://x-access-token:") {
+		// Already has token, replace it
+		parts := strings.SplitN(repoURL, "@", 2)
+		if len(parts) == 2 {
+			tokenURL = fmt.Sprintf("https://x-access-token:%s@%s", token, parts[1])
+		} else {
+			return fmt.Errorf("invalid token URL format: %s", repoURL)
+		}
+	} else {
+		return fmt.Errorf("unsupported URL format: %s", repoURL)
+	}
+
+	// Set the remote URL
+	cmd := exec.Command("git", "remote", "set-url", "origin", tokenURL)
+	cmd.Dir = repoPath
+	log.Infof("Executing Git command: %s (token redacted)", "git remote set-url origin https://x-access-token:***@github.com/...")
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Errorf("Git command failed: %s, output: %s, error: %v", cmd.String(), string(output), err)
+		return fmt.Errorf("failed to set remote URL with token: %w, output: %s", err, string(output))
+	}
+
+	log.Infof("Successfully configured git remote URL with access token for repo: %s", repoPath)
+	return nil
+}
+
+// UpdateRemoteToken updates the token in existing remote URL
+func (g *gitService) UpdateRemoteToken(repoPath, newToken string) error {
+	if newToken == "" {
+		return fmt.Errorf("new access token is required")
+	}
+
+	// Get current remote URL
+	currentURL, err := g.GetRemoteURL(repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to get current remote URL: %w", err)
+	}
+
+	// Check if current URL has token
+	if !strings.Contains(currentURL, "x-access-token:") {
+		return fmt.Errorf("current remote URL does not contain access token: %s", currentURL)
+	}
+
+	// Update token in URL
+	parts := strings.SplitN(currentURL, "@", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid token URL format: %s", currentURL)
+	}
+
+	newURL := fmt.Sprintf("https://x-access-token:%s@%s", newToken, parts[1])
+
+	// Set the updated remote URL
+	cmd := exec.Command("git", "remote", "set-url", "origin", newURL)
+	cmd.Dir = repoPath
+	log.Infof("Executing Git command: %s (token redacted)", "git remote set-url origin https://x-access-token:***@github.com/...")
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		log.Errorf("Git command failed: %s, output: %s, error: %v", cmd.String(), string(output), err)
+		return fmt.Errorf("failed to update remote URL token: %w, output: %s", err, string(output))
+	}
+
+	log.Infof("Successfully updated git remote URL token for repo: %s", repoPath)
 	return nil
 }
