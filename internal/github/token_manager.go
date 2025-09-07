@@ -26,10 +26,10 @@ type GitHubTokenManager interface {
 
 // tokenCacheEntry represents a cached token entry
 type tokenCacheEntry struct {
-	Token         string
-	ExpiresAt     time.Time
+	Token          string
+	ExpiresAt      time.Time
 	InstallationID int64
-	mutex         sync.RWMutex
+	mutex          sync.RWMutex
 }
 
 // githubTokenManager implements GitHubTokenManager
@@ -63,7 +63,7 @@ func (tm *githubTokenManager) GetAccessToken(ctx context.Context, org string) (s
 
 		// Check if token is still valid (with 5 minute buffer)
 		if time.Now().Add(5 * time.Minute).Before(expiresAt) {
-			log.Infof("Using cached access token for org: %s (expires in %.1f minutes)", 
+			log.Infof("Using cached access token for org: %s (expires in %.1f minutes)",
 				org, time.Until(expiresAt).Minutes())
 			return token, nil
 		}
@@ -79,7 +79,7 @@ func (tm *githubTokenManager) GetAccessToken(ctx context.Context, org string) (s
 func (tm *githubTokenManager) InvalidateToken(org string) {
 	tm.cacheMutex.Lock()
 	defer tm.cacheMutex.Unlock()
-	
+
 	if entry, exists := tm.cache[org]; exists {
 		entry.mutex.Lock()
 		entry.Token = ""
@@ -116,7 +116,7 @@ func (tm *githubTokenManager) refreshTokenForOrg(ctx context.Context, org string
 	// Update cache with new token
 	tm.updateTokenCache(org, token, expiresAt, installationID)
 
-	log.Infof("Successfully refreshed access token for org: %s (expires at: %s)", 
+	log.Infof("Successfully refreshed access token for org: %s (expires at: %s)",
 		org, expiresAt.Format(time.RFC3339))
 	return token, nil
 }
@@ -156,7 +156,7 @@ func (tm *githubTokenManager) extractFromInstallationTransport(transportValue re
 	if !installationIDField.IsValid() {
 		return "", time.Time{}, 0, fmt.Errorf("installationID field not found")
 	}
-	
+
 	installationID := installationIDField.Int()
 
 	// Look for token cache fields (ghinstallation might cache tokens internally)
@@ -184,7 +184,7 @@ func (tm *githubTokenManager) extractFromInstallationTransport(transportValue re
 func (tm *githubTokenManager) generateTokenViaAPICall(transportValue reflect.Value, installationID int64) (string, time.Time, int64, error) {
 	// Create a custom round tripper to intercept the Authorization header
 	interceptor := &tokenInterceptor{}
-	
+
 	// Get the original round tripper
 	rtField := transportValue.FieldByName("tr")
 	if !rtField.IsValid() {
@@ -210,7 +210,7 @@ func (tm *githubTokenManager) generateTokenViaAPICall(transportValue reflect.Val
 
 	// Create a temporary HTTP client with our interceptor
 	tempClient := &http.Client{Transport: interceptor}
-	
+
 	// Make a simple API call to trigger token generation
 	req, err := http.NewRequest("GET", "https://api.github.com/installation/repositories", nil)
 	if err != nil {
@@ -289,6 +289,6 @@ func (tm *githubTokenManager) updateTokenCache(org, token string, expiresAt time
 	entry.InstallationID = installationID
 	entry.mutex.Unlock()
 
-	log.Infof("Updated token cache for org %s (installation: %d, expires: %s)", 
+	log.Infof("Updated token cache for org %s (installation: %d, expires: %s)",
 		org, installationID, expiresAt.Format(time.RFC3339))
 }

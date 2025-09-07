@@ -39,7 +39,7 @@ type Manager struct {
 // NewManager creates a new workspace manager with service dependencies
 func NewManager(cfg *config.Config) *Manager {
 	gitService := NewGitService()
-	
+
 	// Initialize GitHub client manager
 	clientManager, err := githubclient.NewClientManager(cfg)
 	if err != nil {
