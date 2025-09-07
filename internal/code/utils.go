@@ -14,7 +14,7 @@ import (
 
 // isContainerRunning 检查指定名称的容器是否在运行
 func isContainerRunning(containerName string) bool {
-	cmd := exec.Command("docker", "ps", "--filter", fmt.Sprintf("name=%s", containerName), "--format", "{{.Names}}")
+	cmd := exec.Command("docker", "ps", "--filter", fmt.Sprintf("name=^%s$", containerName), "--format", "{{.Names}}")
 	output, err := cmd.Output()
 	if err != nil {
 		log.Warnf("Failed to check container status: %v", err)
