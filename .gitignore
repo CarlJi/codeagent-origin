@@ -105,3 +105,5 @@ codeagent
 
 # claude
 .claude
+
+!.claude.json
