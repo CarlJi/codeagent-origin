@@ -49,6 +49,18 @@ func (p *PATAuthenticator) GetInstallationClient(ctx context.Context, installati
 	return p.GetClient(ctx)
 }
 
+// GetAccessTokenForOrg returns the configured personal access token for any organization
+// PAT authentication doesn't have org-specific tokens, so the same token is returned
+func (p *PATAuthenticator) GetAccessTokenForOrg(ctx context.Context, org string) (string, error) {
+	if p.token == "" {
+		return "", fmt.Errorf("GitHub token is not configured")
+	}
+
+	// For PAT authentication, we return the same token regardless of organization
+	// The token's permissions determine what repositories/orgs it can access
+	return p.token, nil
+}
+
 // GetAuthInfo returns authentication information
 func (p *PATAuthenticator) GetAuthInfo() AuthInfo {
 	authInfo := AuthInfo{

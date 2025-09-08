@@ -72,6 +72,55 @@ func (g *GitHubAppAuthenticator) GetInstallationClient(ctx context.Context, inst
 	return client, nil
 }
 
+// GetAccessTokenForOrg returns an access token for the specified organization
+// This method finds the installation for the org and returns the installation access token
+func (g *GitHubAppAuthenticator) GetAccessTokenForOrg(ctx context.Context, org string) (string, error) {
+	if g.appsTransport == nil {
+		return "", fmt.Errorf("GitHub App transport is not configured")
+	}
+
+	// First, find the installation ID for this organization
+	installationID, err := g.findInstallationForOrg(ctx, org)
+	if err != nil {
+		return "", fmt.Errorf("failed to find installation for org %s: %w", org, err)
+	}
+
+	// Create installation transport
+	installationTransport := ghinstallation.NewFromAppsTransport(g.appsTransport, installationID)
+
+	// Get the access token from the installation transport
+	token, err := installationTransport.Token(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get access token for installation %d: %w", installationID, err)
+	}
+
+	return token, nil
+}
+
+// findInstallationForOrg finds the installation ID for a given organization
+func (g *GitHubAppAuthenticator) findInstallationForOrg(ctx context.Context, org string) (int64, error) {
+	// Get app-level client to list installations
+	client, err := g.GetClient(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get app client: %w", err)
+	}
+
+	// List all installations
+	installations, _, err := client.Apps.ListInstallations(ctx, &github.ListOptions{})
+	if err != nil {
+		return 0, fmt.Errorf("failed to list installations: %w", err)
+	}
+
+	// Find installation for the organization
+	for _, installation := range installations {
+		if installation.Account != nil && installation.Account.GetLogin() == org {
+			return installation.GetID(), nil
+		}
+	}
+
+	return 0, fmt.Errorf("no installation found for organization: %s", org)
+}
+
 // GetAuthInfo returns authentication information
 func (g *GitHubAppAuthenticator) GetAuthInfo() AuthInfo {
 	authInfo := AuthInfo{

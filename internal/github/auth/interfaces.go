@@ -31,6 +31,11 @@ type Authenticator interface {
 	// For PAT authenticators, this should return the same as GetClient
 	GetInstallationClient(ctx context.Context, installationID int64) (*github.Client, error)
 
+	// GetAccessTokenForOrg returns an access token for the specified organization
+	// For GitHub App auth: returns installation access token for the org
+	// For PAT auth: returns the configured personal access token
+	GetAccessTokenForOrg(ctx context.Context, org string) (string, error)
+
 	// GetAuthInfo returns information about the current authentication
 	GetAuthInfo() AuthInfo
 

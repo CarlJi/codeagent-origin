@@ -18,6 +18,9 @@ type ClientManagerInterface interface {
 	// GetClient 根据仓库信息获取GitHub客户端
 	GetClient(ctx context.Context, repo *models.Repository) (*Client, error)
 
+	// GetAccessTokenForOrg 获取指定组织的访问令牌
+	GetAccessTokenForOrg(ctx context.Context, org string) (string, error)
+
 	// Close 释放资源
 	Close() error
 }
@@ -143,6 +146,15 @@ func (m *ClientManager) createClientForRepo(ctx context.Context, repo *models.Re
 	return &Client{
 		client: githubClient,
 	}, nil
+}
+
+// GetAccessTokenForOrg 获取指定组织的访问令牌
+func (m *ClientManager) GetAccessTokenForOrg(ctx context.Context, org string) (string, error) {
+	if m.authenticator == nil {
+		return "", fmt.Errorf("authenticator is not configured")
+	}
+
+	return m.authenticator.GetAccessTokenForOrg(ctx, org)
 }
 
 // findInstallationForOrg 查找组织对应的GitHub App安装ID

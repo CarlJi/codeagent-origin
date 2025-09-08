@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/google/go-github/v58/github"
 	"github.com/qiniu/codeagent/internal/config"
+	githubclient "github.com/qiniu/codeagent/internal/github"
 	"github.com/qiniu/codeagent/pkg/models"
 	"github.com/qiniu/x/log"
 )
@@ -30,11 +32,20 @@ type Manager struct {
 	containerService ContainerService
 	dirFormatter     DirFormatter
 	repoCacheService RepoCacheService
+	clientManager    githubclient.ClientManagerInterface
 }
 
 // NewManager creates a new workspace manager with service dependencies
 func NewManager(cfg *config.Config) *Manager {
 	gitService := NewGitService()
+
+	// Initialize GitHub client manager
+	clientManager, err := githubclient.NewClientManager(cfg)
+	if err != nil {
+		log.Errorf("Failed to create GitHub client manager: %v", err)
+		clientManager = nil
+	}
+
 	m := &Manager{
 		baseDir:          cfg.Workspace.BaseDir,
 		config:           cfg,
@@ -43,6 +54,7 @@ func NewManager(cfg *config.Config) *Manager {
 		containerService: NewContainerService(),
 		dirFormatter:     NewDirFormatter(),
 		repoCacheService: NewRepoCacheService(cfg.Workspace.BaseDir, gitService),
+		clientManager:    clientManager,
 	}
 
 	// Recover existing workspaces on startup
@@ -149,6 +161,11 @@ func (m *Manager) CreateWorkspaceFromIssue(issue *github.Issue, aiModel string) 
 		log.Errorf("Failed to store workspace: %v", err)
 	}
 
+	if err := m.configureGitRemoteWithToken(ws); err != nil {
+		log.Errorf("Failed to configure git remote with token for Issue #%d: %v", issue.GetNumber(), err)
+		// Don't fail the workspace creation, continue with original remote
+	}
+
 	log.Infof("Successfully created workspace from Issue #%d: %s", issue.GetNumber(), clonePath)
 	return ws
 }
@@ -162,6 +179,11 @@ func (m *Manager) GetOrCreateWorkspaceForIssue(issue *github.Issue, aiModel stri
 		if m.validateWorkspaceForIssue(ws, issue) {
 			log.Infof("Reusing existing workspace for Issue #%d with AI model %s: %s",
 				issue.GetNumber(), aiModel, ws.Path)
+
+			if err := m.RefreshWorkspaceToken(ws); err != nil {
+				log.Errorf("Failed to refresh token for reused workspace: %v", err)
+				// Don't fail the workspace reuse, continue with existing token
+			}
 			return ws
 		}
 		// If validation fails, cleanup old workspace
@@ -265,6 +287,11 @@ func (m *Manager) CreateWorkspaceFromPR(pr *github.PullRequest, aiModel string) 
 		log.Errorf("Failed to store workspace: %v", err)
 	}
 
+	// Configure git remote with access token
+	if err := m.configureGitRemoteWithToken(ws); err != nil {
+		log.Errorf("Failed to configure git remote with token for PR #%d: %v", pr.GetNumber(), err)
+		// Don't fail the workspace creation, continue with original remote
+	}
 	log.Infof("Created workspace from PR #%d: %s", pr.GetNumber(), ws.Path)
 	return ws
 }
@@ -276,6 +303,12 @@ func (m *Manager) GetOrCreateWorkspaceForPR(pr *github.PullRequest, aiModel stri
 	if ws != nil {
 		// Validate workspace for PR
 		if m.validateWorkspaceForPR(ws, pr) {
+			// 刷新workspace的git remote token
+			if err := m.RefreshWorkspaceToken(ws); err != nil {
+				log.Errorf("Failed to refresh token for reused PR workspace: %v", err)
+				// Don't fail the workspace reuse, continue with existing token
+			}
+
 			// For PR workspaces, also check if content is stale and sync if needed
 			if err := m.syncPRContentIfStale(ws, pr); err != nil {
 				log.Errorf("Failed to sync PR content for workspace: %v", err)
@@ -786,5 +819,51 @@ func (m *Manager) syncPRContentIfStale(ws *models.Workspace, pr *github.PullRequ
 	}
 
 	log.Infof("Successfully synced PR #%d content in workspace", pr.GetNumber())
+	return nil
+}
+
+// configureGitRemoteWithToken configures git remote URL with access token
+func (m *Manager) configureGitRemoteWithToken(ws *models.Workspace) error {
+	if m.clientManager == nil {
+		log.Warnf("Client manager not available, skipping git remote configuration")
+		return nil
+	}
+
+	// Get access token for the organization
+	ctx := context.Background()
+	token, err := m.clientManager.GetAccessTokenForOrg(ctx, ws.Org)
+	if err != nil {
+		return fmt.Errorf("failed to get access token for org %s: %w", ws.Org, err)
+	}
+
+	// Configure git remote with token
+	if err := m.gitService.SetRemoteURLWithToken(ws.Path, ws.Repository, token); err != nil {
+		return fmt.Errorf("failed to set git remote URL with token: %w", err)
+	}
+
+	log.Infof("Successfully configured git remote with access token for workspace: %s", ws.Path)
+	return nil
+}
+
+// RefreshWorkspaceToken refreshes the git remote token for a workspace
+func (m *Manager) RefreshWorkspaceToken(ws *models.Workspace) error {
+	if m.clientManager == nil {
+		log.Warnf("Client manager not available, skipping token refresh")
+		return nil
+	}
+
+	// Get fresh access token for the organization
+	ctx := context.Background()
+	token, err := m.clientManager.GetAccessTokenForOrg(ctx, ws.Org)
+	if err != nil {
+		return fmt.Errorf("failed to get fresh access token for org %s: %w", ws.Org, err)
+	}
+
+	// Update git remote URL with new token
+	if err := m.gitService.UpdateRemoteToken(ws.Path, token); err != nil {
+		return fmt.Errorf("failed to update remote token: %w", err)
+	}
+
+	log.Infof("Successfully refreshed git remote token for workspace: %s", ws.Path)
 	return nil
 }

@@ -404,15 +404,6 @@ gh pr create \
 All the flag required by gh can be obtained from the context
 </gh_create_pull_request>
 
-
-<git_remote>
-You should check your git remote information, if the format as https:@github.com/owner/repo.git, you should use the following command to modify
-example of set-url: 
-  git remote set-url origin https://x-access-token:${gh_token}@github.com/owner/repo.git
-
-The ${gh_token} can be obtained from the system environment variable GH_TOKEN. You are clear about the values of the owner and repo.
-</git_remote>
-
 <gh_commit_message>
 
 Generated with [codeagent](https://github.com/qiniu/codeagent)
@@ -532,7 +523,7 @@ Important Notes:
 - Use git commands via the Bash tool for version control (you have access to specific git commands only):
   - Stage files: Bash(git add <files>)
   - Commit changes: Bash(git commit -m "<message>") - IMPORTANT: append this attribution at the end with the info in <gh_commit_message> tag
-  - Push to remote: Bash(git push origin <branch>) (NEVER force push). If the push operation fails, you should refer to the <git_remote> tag to reset the remote and re-execute it
+  - Push to remote: Bash(git push origin <branch>) (NEVER force push). 
   - Delete files: Bash(git rm <files>) followed by commit and push
   - Check status: Bash(git status)
   - View diff: Bash(git diff)
