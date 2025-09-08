@@ -24,7 +24,7 @@ RUN groupadd -g 24368 codeagent && useradd -u 24368 -g 24368 -m codeagent
 
 # 安装 Claude Code 和 Gemini CLI
 # NOTE(CarlJi): 固定Claude code 版本，防止上游更新导致不兼容
-RUN npm install -g @anthropic-ai/claude-code@1.0.85 @google/gemini-cli
+RUN npm install -g @anthropic-ai/claude-code@1.0.108 @google/gemini-cli
 
 # 安装 toolkit
 RUN apt-get update && apt-get install -y tree jq fd-find ripgrep git-lfs
@@ -62,6 +62,9 @@ RUN chmod +x /usr/local/bin/codeagent-github-mcp-server
 
 # 切换用户
 USER codeagent
+
+# 预配置 Claude Code 以跳过初始化过程
+COPY .claude.json /home/codeagent/.claude.json
 
 # 设置工作目录
 WORKDIR /workspace
