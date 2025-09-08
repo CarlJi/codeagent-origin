@@ -103,5 +103,6 @@ config.yml
 server
 codeagent
 
-# claude
+# claude (but allow root .claude.json for Docker)
 .claude
+!.claude.json

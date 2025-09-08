@@ -803,6 +803,16 @@ func (m *mockGitService) FetchAndCheckoutPR(repoPath string, prNumber int, targe
 	return nil
 }
 
+func (m *mockGitService) SetRemoteURLWithToken(repoPath, repoURL, token string) error {
+	// Mock implementation for testing
+	return nil
+}
+
+func (m *mockGitService) UpdateRemoteToken(repoPath, newToken string) error {
+	// Mock implementation for testing
+	return nil
+}
+
 // TestIssueWorkspaceReuse tests the Issue workspace reuse mechanism
 func TestIssueWorkspaceReuse(t *testing.T) {
 	// Setup test environment
