@@ -67,6 +67,7 @@ type ClaudeConfig struct {
 	Model              string        `yaml:"model"`
 	DefaultHaikuModel  string        `yaml:"default_haiku_model"`
 	DefaultSonnetModel string        `yaml:"default_sonnet_model"`
+	SmallFastModel     string        `yaml:"small_fast_model"`
 	ContainerImage     string        `yaml:"container_image"`
 	Timeout            time.Duration `yaml:"timeout"`
 	Interactive        bool          `yaml:"interactive"`
@@ -147,6 +148,9 @@ func (c *Config) loadFromEnv() {
 	}
 	if sonnetModel := os.Getenv("ANTHROPIC_DEFAULT_SONNET_MODEL"); sonnetModel != "" {
 		c.Claude.DefaultSonnetModel = sonnetModel
+	}
+	if smallFastModel := os.Getenv("ANTHROPIC_SMALL_FAST_MODEL"); smallFastModel != "" {
+		c.Claude.SmallFastModel = smallFastModel
 	}
 	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
 		c.Claude.APIKey = apiKey
@@ -236,6 +240,7 @@ func loadFromEnv() *Config {
 			Model:              os.Getenv("ANTHROPIC_MODEL"),
 			DefaultHaikuModel:  os.Getenv("ANTHROPIC_DEFAULT_HAIKU_MODEL"),
 			DefaultSonnetModel: os.Getenv("ANTHROPIC_DEFAULT_SONNET_MODEL"),
+			SmallFastModel:     os.Getenv("ANTHROPIC_SMALL_FAST_MODEL"),
 			ContainerImage:     getEnvOrDefault("CLAUDE_IMAGE", "anthropic/claude-code:latest"),
 			Timeout:            30 * time.Minute,
 			Interactive:        getEnvBoolOrDefault("CLAUDE_INTERACTIVE", false),

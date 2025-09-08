@@ -115,6 +115,9 @@ func NewClaudeInteractive(workspace *models.Workspace, cfg *config.Config) (Code
 	if cfg.Claude.DefaultSonnetModel != "" {
 		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", cfg.Claude.DefaultSonnetModel))
 	}
+	if cfg.Claude.SmallFastModel != "" {
+		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_SMALL_FAST_MODEL=%s", cfg.Claude.SmallFastModel))
+	}
 
 	// 添加容器镜像 - 不需要额外命令，因为使用了--entrypoint
 	args = append(args, cfg.Claude.ContainerImage)
