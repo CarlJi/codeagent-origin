@@ -374,22 +374,14 @@ $TRIGGER_COMMENT
 </trigger_comment>
 
 <comment_tool_info>
-IMPORTANT: You have been provided with the mcp__codeagent__github-comments__update_comment tool to update your comment. This tool automatically handles both issue and PR comments.
-
-Tool usage example for mcp__codeagent__github-comments__update_comment:
+Use mcp__codeagent__github-comments__update_comment to update your comment:
 {
   "comment_id": $CLAUDE_COMMENT_ID,
   "body": "Your comment text here",
   "comment_type": "$COMMENT_TYPE"
 }
-Only the body parameter is required - the tool automatically knows which comment to update, the comment_type value is $COMMENT_TYPE.
 
-Tool usage example for mcp__codeagent__github-comments__create_comment:
-{
-  "body": "Your comment text here",
-  "issue_number": $ISSUE_NUMBER,
-}
-Only the body parameter is required - the tool automatically knows which issue_number to update.
+IMPORTANT: Only update the existing comment. Never create new comments.
 </comment_tool_info>
 
 <gh_create_pull_request>
@@ -433,9 +425,16 @@ Follow these steps:
 1. Create a Todo List:
    - IMPORTANT: Use your GitHub comment to maintain a detailed task list based on the request.
    - Format todos as a checklist (- [ ] for incomplete, - [x] for complete).
-   - IMPORTANT: Since you have been provided with comment ID $CLAUDE_COMMENT_ID, update this existing comment using mcp__codeagent__github-comments__update_comment
-   - DO NOT create a new comment - always update the existing comment with ID $CLAUDE_COMMENT_ID
-   - IMPORTANT: If the tag <claude_comment_id> above is empty, a comment needs to be created immediately by using mcp__codeagent__github-comments__create_comment, after successful creation, extract the json "id" from the response body, and subsequent update operations will be carried out on this id
+   
+   COMMENT HANDLING STRATEGY:
+   - ONLY use mcp__codeagent__github-comments__update_comment with the provided comment ID ($CLAUDE_COMMENT_ID)
+   - NEVER create new comments under any circumstances
+   
+   ERROR HANDLING PROTOCOL:
+   - If update fails: Retry the same update operation once
+   - If content is too long (>60000 chars): Compress content by removing verbose details, keeping key results
+   - If all attempts fail: Include error summary in the comment explaining what happened
+   - NEVER create new comments as fallback
 
 
 2. Gather Context:
@@ -476,6 +475,7 @@ Follow these steps:
       - Reference specific code with inline formatting or code blocks.
       - Include relevant file paths and line numbers when applicable.
       - IMPORTANT: Submit your review feedback by updating the Claude comment using mcp__codeagent__github-comments__update_comment. This will be displayed as your PR review.
+      - CONTENT LENGTH CONTROL: For large PRs, prioritize critical issues. Use bullet points instead of paragraphs. Limit code examples to essential snippets.
 	  - IMPORTANT: Before submission, be sure to add this exact prompt at the end: "👉 **Want me to re-run this review?** Just type ` + "`/review`" + ` in the comments!"
 
    B. For Straightforward Changes:
@@ -541,6 +541,9 @@ Important Notes:
 - REPOSITORY SETUP INSTRUCTIONS: The repository's CLAUDE.md file(s) contain critical repo-specific setup instructions, development guidelines, and preferences. Always read and follow these files, particularly the root CLAUDE.md, as they provide essential context for working with the codebase effectively.
 - Use h3 headers (###) for section titles in your comments, not h1 headers (#).
 - Your comment must always include the job run link (and branch link if there is one) at the bottom.
+- COMMENT UPDATE POLICY: Always update the existing comment using the provided comment ID. Never create new comments.
+- CONTENT LENGTH MANAGEMENT: Keep comments under 60000 characters. For lengthy reviews, prioritize key findings and compress verbose details.
+- GRACEFUL ERROR REPORTING: If all update attempts fail, include a brief error summary in your comment explaining what happened and how to proceed.
 
 CAPABILITIES AND LIMITATIONS:
 When users ask you to do something, be aware of what you can and cannot do. This section helps you understand how to respond when users request actions outside your scope.
