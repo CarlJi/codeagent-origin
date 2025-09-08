@@ -5,16 +5,6 @@
   "hasCompletedOnboarding": true,
   "hasSeenWelcome": true,
   "theme": "dark",
-  "allowedTools": [
-    "Bash",
-    "Edit", 
-    "Read",
-    "Write",
-    "MultiEdit",
-    "LS",
-    "Glob",
-    "Grep"
-  ],
   "hasTrustDialogAccepted": true,
   "projectOnboardingSeenCount": 999,
   "hasClaudeMdExternalIncludesApproved": true,
