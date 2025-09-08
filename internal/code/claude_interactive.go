@@ -106,6 +106,15 @@ func NewClaudeInteractive(workspace *models.Workspace, cfg *config.Config) (Code
 	if cfg.Claude.BaseURL != "" {
 		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_BASE_URL=%s", cfg.Claude.BaseURL))
 	}
+	if cfg.Claude.Model != "" {
+		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_MODEL=%s", cfg.Claude.Model))
+	}
+	if cfg.Claude.DefaultHaikuModel != "" {
+		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_DEFAULT_HAIKU_MODEL=%s", cfg.Claude.DefaultHaikuModel))
+	}
+	if cfg.Claude.DefaultSonnetModel != "" {
+		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", cfg.Claude.DefaultSonnetModel))
+	}
 
 	// 添加容器镜像 - 不需要额外命令，因为使用了--entrypoint
 	args = append(args, cfg.Claude.ContainerImage)

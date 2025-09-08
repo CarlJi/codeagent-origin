@@ -61,13 +61,15 @@ type WorkspaceConfig struct {
 }
 
 type ClaudeConfig struct {
-	APIKey         string        `yaml:"api_key"`
-	AuthToken      string        `yaml:"auth_token"`
-	BaseURL        string        `yaml:"base_url"`
-	Model          string        `yaml:"model"`
-	ContainerImage string        `yaml:"container_image"`
-	Timeout        time.Duration `yaml:"timeout"`
-	Interactive    bool          `yaml:"interactive"`
+	APIKey             string        `yaml:"api_key"`
+	AuthToken          string        `yaml:"auth_token"`
+	BaseURL            string        `yaml:"base_url"`
+	Model              string        `yaml:"model"`
+	DefaultHaikuModel  string        `yaml:"default_haiku_model"`
+	DefaultSonnetModel string        `yaml:"default_sonnet_model"`
+	ContainerImage     string        `yaml:"container_image"`
+	Timeout            time.Duration `yaml:"timeout"`
+	Interactive        bool          `yaml:"interactive"`
 }
 
 type DockerConfig struct {
@@ -139,6 +141,12 @@ func (c *Config) loadFromEnv() {
 	}
 	if model := os.Getenv("ANTHROPIC_MODEL"); model != "" {
 		c.Claude.Model = model
+	}
+	if haikuModel := os.Getenv("ANTHROPIC_DEFAULT_HAIKU_MODEL"); haikuModel != "" {
+		c.Claude.DefaultHaikuModel = haikuModel
+	}
+	if sonnetModel := os.Getenv("ANTHROPIC_DEFAULT_SONNET_MODEL"); sonnetModel != "" {
+		c.Claude.DefaultSonnetModel = sonnetModel
 	}
 	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
 		c.Claude.APIKey = apiKey
@@ -222,13 +230,15 @@ func loadFromEnv() *Config {
 			CleanupAfter: 24 * time.Hour,
 		},
 		Claude: ClaudeConfig{
-			APIKey:         os.Getenv("ANTHROPIC_API_KEY"),
-			AuthToken:      os.Getenv("ANTHROPIC_AUTH_TOKEN"),
-			BaseURL:        os.Getenv("ANTHROPIC_BASE_URL"),
-			Model:          os.Getenv("ANTHROPIC_MODEL"),
-			ContainerImage: getEnvOrDefault("CLAUDE_IMAGE", "anthropic/claude-code:latest"),
-			Timeout:        30 * time.Minute,
-			Interactive:    getEnvBoolOrDefault("CLAUDE_INTERACTIVE", false),
+			APIKey:             os.Getenv("ANTHROPIC_API_KEY"),
+			AuthToken:          os.Getenv("ANTHROPIC_AUTH_TOKEN"),
+			BaseURL:            os.Getenv("ANTHROPIC_BASE_URL"),
+			Model:              os.Getenv("ANTHROPIC_MODEL"),
+			DefaultHaikuModel:  os.Getenv("ANTHROPIC_DEFAULT_HAIKU_MODEL"),
+			DefaultSonnetModel: os.Getenv("ANTHROPIC_DEFAULT_SONNET_MODEL"),
+			ContainerImage:     getEnvOrDefault("CLAUDE_IMAGE", "anthropic/claude-code:latest"),
+			Timeout:            30 * time.Minute,
+			Interactive:        getEnvBoolOrDefault("CLAUDE_INTERACTIVE", false),
 		},
 		Gemini: GeminiConfig{
 			APIKey:             os.Getenv("GEMINI_API_KEY"),

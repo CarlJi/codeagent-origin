@@ -115,6 +115,12 @@ func NewClaudeDocker(workspace *models.Workspace, cfg *config.Config) (Code, err
 	if cfg.Claude.Model != "" {
 		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_MODEL=%s", cfg.Claude.Model))
 	}
+	if cfg.Claude.DefaultHaikuModel != "" {
+		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_DEFAULT_HAIKU_MODEL=%s", cfg.Claude.DefaultHaikuModel))
+	}
+	if cfg.Claude.DefaultSonnetModel != "" {
+		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", cfg.Claude.DefaultSonnetModel))
+	}
 	if cfg.GitHub.GHToken != "" {
 		args = append(args, "-e", fmt.Sprintf("GH_TOKEN=%s", cfg.GitHub.GHToken))
 	}
