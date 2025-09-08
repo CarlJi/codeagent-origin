@@ -121,6 +121,9 @@ func NewClaudeDocker(workspace *models.Workspace, cfg *config.Config) (Code, err
 	if cfg.Claude.DefaultSonnetModel != "" {
 		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_DEFAULT_SONNET_MODEL=%s", cfg.Claude.DefaultSonnetModel))
 	}
+	if cfg.Claude.SmallFastModel != "" {
+		args = append(args, "-e", fmt.Sprintf("ANTHROPIC_SMALL_FAST_MODEL=%s", cfg.Claude.SmallFastModel))
+	}
 	if cfg.GitHub.GHToken != "" {
 		args = append(args, "-e", fmt.Sprintf("GH_TOKEN=%s", cfg.GitHub.GHToken))
 	}
