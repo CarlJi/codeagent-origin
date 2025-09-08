@@ -97,7 +97,7 @@ func (r *repoCacheService) UpdateCachedRepo(cachedRepoPath string) error {
 	}
 
 	if err := r.updateCurrentBranch(cachedRepoPath); err != nil {
-		log.Warnf("Failed to update main branch in %s: %v", cachedRepoPath, err)
+		log.Errorf("Failed to update main branch in %s: %v", cachedRepoPath, err)
 		// Don't fail the entire operation if main branch update fails
 	}
 
