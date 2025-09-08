@@ -1,301 +1,137 @@
-# CodeAgent
+# CodeAgent - Your AI Programming Assistant 🤖
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/qiniu/codeagent)](https://goreportcard.com/report/github.com/qiniu/codeagent)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/qiniu/codeagent)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![CI](https://github.com/qiniu/codeagent/workflows/CI/badge.svg)](https://github.com/qiniu/codeagent/actions)
 
-**CodeAgent** is a Go-based AI-powered automated code generation and collaboration system that seamlessly integrates with GitHub. It receives AI instructions through GitHub webhooks and automatically handles code generation, modification, and review tasks for Issues and Pull Requests.
+**CodeAgent** is an AI-powered intelligent programming assistant that integrates directly into your GitHub workflow. Simply mention the bot account in Issues or PRs, or use simple commands to get code analysis, automated programming, and code review services.
 
-## 🚀 Key Features
+> ⚠️ **Important Note**: `@bot-name` in this documentation is an example. Replace it with your configured assistant account name in actual use.
 
-- 🤖 **Multiple AI Providers**: Support for Anthropic Claude and Google Gemini
-- 🔄 **GitHub Integration**: Automatic processing of Issues and Pull Requests
-- 🐳 **Flexible Deployment**: Docker containers or local CLI execution
-- 📁 **Smart Workspace Management**: Git worktree-based isolated environments
-- 🔐 **Security First**: Webhook signature verification and secure token handling
-- ⚡ **Real-time Processing**: Instant response to GitHub events
+## ✨ What You Can Do With It
 
-## 📋 Table of Contents
+CodeAgent supports two interaction modes to flexibly meet different use cases:
 
-- [Architecture Overview](#architecture-overview)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Quick Setup](#quick-setup)
-- [Configuration](#configuration)
-  - [Environment Variables](#environment-variables)
-  - [Configuration File](#configuration-file)
-- [Usage](#usage)
-  - [GitHub Integration](#github-integration)
-  - [Command Reference](#command-reference)
-  - [Examples](#examples)
-- [Development](#development)
-  - [Project Structure](#project-structure)
-  - [Building](#building)
-  - [Testing](#testing)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+### 🎯 Mode 1: @ Mention Interaction (General Mode)
 
-## 🏗️ Architecture Overview
+Use `@bot-name` + natural language, suitable for complex requirements and flexible expression
 
-CodeAgent uses a webhook-driven architecture for seamless GitHub integration:
+**In Issues:**
 
-```
-GitHub Events → Webhook → CodeAgent → Workspace Creation → AI Processing → Code Generation → PR Updates
-```
+- `@bot-name Help me analyze the root cause of this issue` - Deep problem analysis
+- `@bot-name Help me implement this feature` - Complete feature implementation and PR creation
+- `@bot-name Design a solution` - Architecture design suggestions
 
-### Core Components
+**In PRs:**
 
-- **Agent** (`internal/agent/`): Orchestrates the entire workflow
-- **Webhook Handler** (`internal/webhook/`): Processes GitHub webhooks (Issues and PRs)
-- **Workspace Manager** (`internal/workspace/`): Manages temporary Git worktrees
-- **AI Providers** (`internal/code/`): Claude and Gemini integration (Docker/CLI modes)
-- **GitHub Client** (`internal/github/`): Handles GitHub API interactions
+- `@bot-name Help me analyze this implementation` - Code implementation analysis
+- `@bot-name Optimize the performance` - Performance optimization improvements
+- `@bot-name Add error handling logic` - Code improvement and commit submission
+- `@bot-name Refactor this function` - Code refactoring
 
-## 🚀 Getting Started
+### ⚡ Mode 2: Slash Commands (Quick Mode)
 
-### Prerequisites
+Use predefined commands for concise and efficient completion of common tasks
 
-**Required:**
-- Go 1.21 or higher
-- Git
-- GitHub Personal Access Token
-- AI Provider API Key (Claude or Gemini)
+| Command | Use Case | Function Description |
+|---------|----------|---------------------|
+| `/code` | Issue comments | Quick requirement analysis, code implementation and PR creation |
+| `/continue [instruction]` | PR comments/Reviews | Continue development based on existing code, submit commits |
+| `/review` | PR comments | Perform complete code review again |
 
-### Installation
+### 🤖 Automated Services
+
+- **Automatic Code Review**: Every PR receives intelligent code review
+- **Fork Repository Support**: Support for PR interactions from fork repositories (comment mode only)
+- **Smart Filtering**: Automatically exclude PRs from specific assistant accounts
+- **Multi-model Support**: Specify different AI models via parameters (e.g., `-claude`, `-gemini`)
+
+## 🚀 Deployment & Development
+
+CodeAgent is a backend service that receives GitHub Webhook events and responds intelligently.
+
+### Quick Deployment
+
+**Step 1: Environment Setup**
 
 ```bash
-# Clone the repository
+# Clone the code
 git clone https://github.com/qiniu/codeagent.git
 cd codeagent
 
-# Download dependencies
+# Install dependencies
 go mod download
 ```
 
-### Quick Setup
+**Step 2: Configure Environment Variables**
 
 ```bash
-# Set environment variables
-export GITHUB_TOKEN="your-github-token"
-export CLAUDE_API_KEY="your-claude-api-key"
-export WEBHOOK_SECRET="your-webhook-secret"
-
-# Run the server
-go run ./cmd/server --port 8888
+# Set required environment variables
+export GITHUB_TOKEN="your-GitHub-Token"
+export CLAUDE_API_KEY="your-Claude-API-Key"  # or other AI provider key
+export WEBHOOK_SECRET="your-Webhook-Secret"
 ```
 
-**Health Check**
+**Step 3: Start Service**
 
 ```bash
+# Run directly
+go run ./cmd/server --port 8888
+
+# Check service status
 curl http://localhost:8888/health
 ```
 
-## ⚙️ Configuration
+**Step 4: Configure GitHub Webhook**
 
-### Environment Variables
+Add a Webhook in your repository settings:
 
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `GITHUB_TOKEN` | GitHub Personal Access Token | Yes | `ghp_xxxxxxxxxxxx` |
-| `WEBHOOK_SECRET` | GitHub Webhook Secret | Yes | `your-strong-secret` |
-| `CODE_PROVIDER` | AI provider (claude/gemini) | No | `claude` |
-| `USE_DOCKER` | Use Docker containers | No | `true` |
-| `PORT` | Server port | No | `8888` |
-| `LOG_LEVEL` | Logging level | No | `debug` |
+- URL: `https://your-domain.com/hook`
+- Content type: `application/json`
+- Secret: Same as `WEBHOOK_SECRET`
+- Events: Check `Issue comments`, `Pull request reviews`, `Pull requests`
 
-### Configuration File
+🎉 **Done!** Now you can use `@bot-name` in Issues or PRs
 
-Create `config.yaml` in the project root:
-
-```yaml
-# Server configuration
-server:
-  port: 8888
-
-# GitHub integration
-github:
-  webhook_url: "http://localhost:8888/hook"
-
-# Workspace settings
-workspace:
-  base_dir: "./workspace"  # Supports relative paths
-  cleanup_after: "24h"
-
-# AI provider selection
-code_provider: claude  # Options: claude, gemini
-use_docker: false      # true = Docker, false = CLI
-
-# Claude configuration
-claude:
-  container_image: "goplusorg/codeagent:v0.4"
-  timeout: "30m"
-
-# Gemini configuration  
-gemini:
-  container_image: "goplusorg/codeagent:v0.4"
-  timeout: "30m"
-
-```
-
-
-## 📖 Usage
-
-### GitHub Integration
-
-**1. Configure GitHub Webhook**
-
-Go to your repository settings → Webhooks → Add webhook:
-
-- **URL**: `https://your-domain.com/hook`
-- **Content type**: `application/json`
-- **Secret**: Same as your `WEBHOOK_SECRET`
-- **Events**: Select `Issue comments`, `Pull request reviews`, `Pull requests`
-
-**2. Webhook Security**
-
-CodeAgent supports GitHub webhook signature verification:
-- SHA-256 verification (recommended)
-- SHA-1 backward compatibility
-- Constant-time comparison to prevent timing attacks
-- Development mode: verification skipped if secret not configured
-
-### Command Reference
-
-Use these commands in GitHub Issue comments or PR discussions:
-
-| Command | Description | Example |
-|---------|-------------|---------|
-| `/code [description]` | Generate code for an Issue | `/code Implement user authentication with JWT` or `/code` |
-| `/continue <instruction>` | Continue development in PR | `/continue Add unit tests for the login function` |
-
-### Examples
-
-**1. Create New Feature**
-```
-# In a GitHub Issue comment:
-/code Implement user login functionality including username/password validation and JWT token generation
-```
-
-**2. Enhance Existing Code**
-```  
-# In a PR comment:
-/continue Add comprehensive error handling and input validation
-```
-
-
-## 🛠️ Development
-
-### Project Structure
-
-```
-codeagent/
-├── cmd/
-│   └── server/                 # Application entry point
-├── internal/
-│   ├── agent/                  # Core orchestration logic
-│   ├── code/                   # AI provider implementations
-│   ├── config/                 # Configuration management
-│   ├── context/                # Context collection and formatting
-│   ├── events/                 # Event parsing
-│   ├── github/                 # GitHub API client
-│   ├── interaction/            # User interaction handling
-│   ├── mcp/                    # MCP (Model Context Protocol) support
-│   ├── modes/                  # Processing mode handlers
-│   ├── webhook/                # GitHub webhook handling
-│   └── workspace/              # Git workspace management
-├── pkg/
-│   ├── models/                 # Shared data structures
-│   └── signature/              # Webhook signature verification
-├── test/
-│   └── integration/            # Integration tests
-├── docs/                       # Documentation
-├── config.example.yaml         # Example configuration
-└── README.md                   # This file
-```
-
-### Building
+### Docker Deployment
 
 ```bash
-# Build for current platform
+# Build image
+docker build -t codeagent .
+
+# Run container
+docker run -d \
+  -p 8888:8888 \
+  -e GITHUB_TOKEN="your-token" \
+  -e CLAUDE_API_KEY="your-key" \
+  -e WEBHOOK_SECRET="your-secret" \
+  codeagent
+```
+
+### Local Development & Testing
+
+```bash
+# Build
 make build
 
-# Or manually
-go build -o bin/codeagent ./cmd/server
-
-# Cross-compilation
-GOOS=linux GOARCH=amd64 go build -o bin/codeagent-linux ./cmd/server
-```
-
-### Testing
-
-```bash
-# Run all tests
+# Run tests
 make test
 
-# Integration testing
-go run ./cmd/server --config test-config.yaml
-
-# Test webhook endpoint
+# Test webhook events
 curl -X POST http://localhost:8888/hook \
   -H "Content-Type: application/json" \
   -H "X-GitHub-Event: issue_comment" \
   -d @test-data/issue-comment.json
 ```
 
-
-
-## 🔧 Troubleshooting
-
-**Common Issues**
-
-| Issue | Symptom | Solution |
-|-------|---------|----------|
-| Webhook not received | No response to GitHub commands | Check webhook URL and secret configuration |
-| AI provider timeout | Long delays or timeouts | Increase timeout in config, check API key |
-| Docker issues | Container startup failures | Ensure Docker daemon is running |
-| CLI not found | Command not found errors | Install Claude/Gemini CLI tools |
-| Permission denied | Git operations fail | Check GitHub token permissions |
-| Workspace cleanup | Disk space issues | Monitor workspace directory, adjust cleanup_after |
-
-**Debug Commands**
-```bash
-# Check server status
-curl http://localhost:8888/health
-
-# View server logs
-export LOG_LEVEL=debug
-./scripts/start.sh
-
-# Test webhook manually
-curl -X POST http://localhost:8888/hook \
-  -H "Content-Type: application/json" \
-  -H "X-GitHub-Event: ping" \
-  -d '{"zen":"GitHub zen message"}'
-```
-
 ## 🤝 Contributing
 
-We welcome contributions! Here's how you can help:
-
-**Ways to Contribute**
-- 🐛 [Report Bugs](https://github.com/qiniu/codeagent/issues/new?template=bug_report.md)
-- 💡 [Feature Requests](https://github.com/qiniu/codeagent/issues/new?template=feature_request.md)
-- 📝 [Improve Documentation](https://github.com/qiniu/codeagent/issues/new?template=documentation.md)
-- 🔧 [Submit Code](CONTRIBUTING.md#code-contributions)
-
-Please read our [Contributing Guide](CONTRIBUTING.md) for detailed information about the development process.
+Welcome to contribute! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development process.
 
 ## 📄 License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
 
-## 🙏 Acknowledgments
-
-Thank you to all developers and users who have contributed to making CodeAgent better!
-
 ---
 
-**Need help?** Check our [documentation](docs/) or [open an issue](https://github.com/qiniu/codeagent/issues/new).
+**Need help?** Check [documentation](docs/) or [open an issue](https://github.com/qiniu/codeagent/issues/new)
