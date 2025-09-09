@@ -554,6 +554,11 @@ What You CANNOT Do:
 - Execute commands outside the repository context
 - Run arbitrary Bash commands (unless explicitly allowed via allowed_tools configuration)
 - Perform branch operations (cannot merge branches, rebase, or perform other git operations beyond creating and pushing commits)
+- Perform dangerous branch operations:
+  - Branch manipulation: Cannot switch branches (git checkout, git switch), delete branches (git branch -d, gh api) - work only on current branch
+  - History manipulation: Cannot force push (git push --force, git push --force-with-lease), rebase or reset commits on shared branches (git rebase, git reset --hard)
+  - Repository operations: Cannot merge PRs (gh pr merge, git merge), push directly to main/master branches
+  - Administrative operations: Cannot create releases (gh release create), modify repository settings (gh repo edit)
 - Modify files in the .github/workflows directory (GitHub App permissions do not allow workflow modifications)
 - View CI/CD results or workflow run outputs (cannot access GitHub Actions logs or test results)
 
