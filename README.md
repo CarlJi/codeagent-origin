@@ -6,7 +6,7 @@
 
 **CodeAgent** is an AI-powered intelligent programming assistant that integrates directly into your GitHub workflow. Simply mention the bot account in Issues or PRs, or use simple commands to get code analysis, automated programming, and code review services.
 
-> ⚠️ **Important Note**: `@bot-name` in this documentation is an example. Replace it with your configured assistant account name in actual use.
+> ⚠️ **Important Note**: `@niupilot` in this documentation is an example. Replace it with your configured assistant account name in actual use.
 
 ## ✨ What You Can Do With It
 
@@ -14,30 +14,30 @@ CodeAgent supports two interaction modes to flexibly meet different use cases:
 
 ### 🎯 Mode 1: @ Mention Interaction (General Mode)
 
-Use `@bot-name` + natural language, suitable for complex requirements and flexible expression
+Use `@niupilot` + natural language, suitable for complex requirements and flexible expression
 
 **In Issues:**
 
-- `@bot-name Help me analyze the root cause of this issue` - Deep problem analysis
-- `@bot-name Help me implement this feature` - Complete feature implementation and PR creation
-- `@bot-name Design a solution` - Architecture design suggestions
+- `@niupilot Help me analyze the root cause of this issue` - Deep problem analysis
+- `@niupilot Help me implement this feature` - Complete feature implementation and PR creation
+- `@niupilot Design a solution` - Architecture design suggestions
 
 **In PRs:**
 
-- `@bot-name Help me analyze this implementation` - Code implementation analysis
-- `@bot-name Optimize the performance` - Performance optimization improvements
-- `@bot-name Add error handling logic` - Code improvement and commit submission
-- `@bot-name Refactor this function` - Code refactoring
+- `@niupilot Help me analyze this implementation` - Code implementation analysis
+- `@niupilot Optimize the performance` - Performance optimization improvements
+- `@niupilot Add error handling logic` - Code improvement and commit submission
+- `@niupilot Refactor this function` - Code refactoring
 
 ### ⚡ Mode 2: Slash Commands (Quick Mode)
 
 Use predefined commands for concise and efficient completion of common tasks
 
-| Command | Use Case | Function Description |
-|---------|----------|---------------------|
-| `/code` | Issue comments | Quick requirement analysis, code implementation and PR creation |
-| `/continue [instruction]` | PR comments/Reviews | Continue development based on existing code, submit commits |
-| `/review` | PR comments | Perform complete code review again |
+| Command                   | Use Case            | Function Description                                            |
+| ------------------------- | ------------------- | --------------------------------------------------------------- |
+| `/code`                   | Issue comments      | Quick requirement analysis, code implementation and PR creation |
+| `/continue [instruction]` | PR comments/Reviews | Continue development based on existing code, submit commits     |
+| `/review`                 | PR comments         | Perform complete code review again                              |
 
 ### 🤖 Automated Services
 
@@ -91,7 +91,7 @@ Add a Webhook in your repository settings:
 - Secret: Same as `WEBHOOK_SECRET`
 - Events: Check `Issue comments`, `Pull request reviews`, `Pull requests`
 
-🎉 **Done!** Now you can use `@bot-name` in Issues or PRs
+🎉 **Done!** Now you can use `@niupilot` in Issues or PRs
 
 ### Docker Deployment
 

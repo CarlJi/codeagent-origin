@@ -6,7 +6,7 @@
 
 **CodeAgent** 是一个基于 AI 的智能编程助手，直接集成到你的 GitHub 工作流中。只需要在 Issue 或 PR 中 @ 助手账号或使用简单命令，就能获得代码分析、自动编程、代码审查等服务。
 
-> 📝 **说明**：文档中的 `@bot-name` 是示例，实际使用时需要替换为你配置的助手账号名称
+> 📝 **说明**：文档中的 `@niupilot` 是示例，实际使用时需要替换为你配置的助手账号名称
 
 ## ✨ 你能用它做什么
 
@@ -14,20 +14,20 @@ CodeAgent 支持两种交互模式，灵活满足不同使用场景：
 
 ### 🎯 模式一：@ 提及交互（通用模式）
 
-使用 `@bot-name` + 自然语言，适合复杂需求和灵活表达
+使用 `@niupilot` + 自然语言，适合复杂需求和灵活表达
 
 **在 Issue 中：**
 
-- `@bot-name 帮我分析一下这个问题的根因` - 深度问题分析
-- `@bot-name 帮我实现这个功能` - 完整功能实现并创建 PR
-- `@bot-name 设计一个解决方案` - 架构设计建议
+- `@niupilot 帮我分析一下这个问题的根因` - 深度问题分析
+- `@niupilot 帮我实现这个功能` - 完整功能实现并创建 PR
+- `@niupilot 设计一个解决方案` - 架构设计建议
 
 **在 PR 中：**
 
-- `@bot-name 帮我分析一下这个实现` - 代码实现分析
-- `@bot-name 优化一下性能` - 性能优化改进
-- `@bot-name 添加错误处理逻辑` - 代码改进并提交 commit
-- `@bot-name 重构这个函数` - 代码重构
+- `@niupilot 帮我分析一下这个实现` - 代码实现分析
+- `@niupilot 优化一下性能` - 性能优化改进
+- `@niupilot 添加错误处理逻辑` - 代码改进并提交 commit
+- `@niupilot 重构这个函数` - 代码重构
 
 ### ⚡ 模式二：Slash Commands（快捷模式）
 
@@ -91,7 +91,7 @@ curl http://localhost:8888/health
 - Secret: 与 `WEBHOOK_SECRET` 相同
 - 事件: 勾选 `Issue comments`, `Pull request reviews`, `Pull requests`
 
-🎉 **完成！** 现在就可以在 Issue 或 PR 中使用 `@bot-name` 了
+🎉 **完成！** 现在就可以在 Issue 或 PR 中使用 `@niupilot` 了
 
 ### Docker 部署
 
