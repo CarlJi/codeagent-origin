@@ -4,6 +4,8 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/qiniu/codeagent)](https://go.dev/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
+[简体中文](README.zh.md) | English
+
 **CodeAgent** is an AI-powered intelligent programming assistant that integrates directly into your GitHub workflow. Simply mention the bot account in Issues or PRs, or use simple commands to get code analysis, automated programming, and code review services.
 
 > ⚠️ **Important Note**: `@niupilot` in this documentation is an example. Replace it with your configured assistant account name in actual use.
