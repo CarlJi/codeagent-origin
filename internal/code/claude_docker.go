@@ -2,6 +2,7 @@ package code
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -17,9 +18,23 @@ const (
 	targetMCPConfigPath = "/home/codeagent/mcp-config.json"
 )
 
+// TokenProvider defines interface for getting access tokens
+type TokenProvider interface {
+	GetAccessTokenForOrg(ctx context.Context, org string) (string, error)
+}
+
+// GlobalTokenProvider holds the global token provider instance
+var GlobalTokenProvider TokenProvider
+
+// SetGlobalTokenProvider sets the global token provider
+func SetGlobalTokenProvider(provider TokenProvider) {
+	GlobalTokenProvider = provider
+}
+
 // claudeCode Docker implementation with MCP support
 type claudeCode struct {
 	containerName string
+	workspace     *models.Workspace
 }
 
 func NewClaudeDocker(workspace *models.Workspace, cfg *config.Config) (Code, error) {
@@ -44,6 +59,7 @@ func NewClaudeDocker(workspace *models.Workspace, cfg *config.Config) (Code, err
 		log.Infof("Found existing container: %s, reusing it", containerName)
 		return &claudeCode{
 			containerName: containerName,
+			workspace:     workspace,
 		}, nil
 	}
 
@@ -80,6 +96,10 @@ func NewClaudeDocker(workspace *models.Workspace, cfg *config.Config) (Code, err
 		"-v", fmt.Sprintf("%s:/workspace", workspacePath), // 挂载工作空间
 		"-v", fmt.Sprintf("%s:/home/codeagent/.claude", claudeConfigPath), // 挂载 claude 认证信息
 		"-w", "/workspace", // 设置工作目录
+	}
+
+	if cfg.GitHub.App.PrivateKeyPath != "" {
+		args = append(args, "-v", fmt.Sprintf("%s:/home/codeagent/github_app_key.pem", cfg.GitHub.App.PrivateKeyPath))
 	}
 
 	// Mount processed .codeagent directory and merged agents
@@ -162,6 +182,7 @@ func NewClaudeDocker(workspace *models.Workspace, cfg *config.Config) (Code, err
 
 	return &claudeCode{
 		containerName: containerName,
+		workspace:     workspace,
 	}, nil
 }
 
@@ -170,13 +191,28 @@ func (c *claudeCode) Prompt(message string) (*Response, error) {
 
 	args := []string{
 		"exec",
+	}
+
+	// 动态获取GitHub token并传递给容器
+	if GlobalTokenProvider != nil && c.workspace != nil {
+		ctx := context.Background()
+		token, err := GlobalTokenProvider.GetAccessTokenForOrg(ctx, c.workspace.Org)
+		if err != nil {
+			log.Errorf("Failed to get access token for org %s: %v", c.workspace.Org, err)
+		} else {
+			args = append(args, "-e", fmt.Sprintf("GH_TOKEN=%s", token))
+			log.Infof("Using dynamic GH_TOKEN for org: %s", c.workspace.Org)
+		}
+	}
+
+	args = append(args,
 		c.containerName,
 		"claude",
 		"--mcp-config", targetMCPConfigPath,
 		"--dangerously-skip-permissions",
 		"-c",
 		"-p", message,
-	}
+	)
 
 	log.Infof("Claude command: docker %s", strings.Join(args, " "))
 

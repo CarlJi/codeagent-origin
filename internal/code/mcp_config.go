@@ -102,7 +102,7 @@ func (g *MCPConfigGenerator) buildEnvironment() map[string]string {
 			env["GITHUB_APP_PRIVATE_KEY"] = g.config.GitHub.App.PrivateKey
 		}
 		if g.config.GitHub.App.PrivateKeyPath != "" {
-			env["GITHUB_APP_PRIVATE_KEY_PATH"] = g.config.GitHub.App.PrivateKeyPath
+			env["GITHUB_APP_PRIVATE_KEY_PATH"] = "/home/codeagent/github_app_key.pem"
 		}
 	}
 

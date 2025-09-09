@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v58/github"
+	"github.com/qiniu/codeagent/internal/code"
 	"github.com/qiniu/codeagent/internal/config"
 	githubclient "github.com/qiniu/codeagent/internal/github"
 	"github.com/qiniu/codeagent/pkg/models"
@@ -55,6 +56,11 @@ func NewManager(cfg *config.Config) *Manager {
 		dirFormatter:     NewDirFormatter(),
 		repoCacheService: NewRepoCacheService(cfg.Workspace.BaseDir, gitService),
 		clientManager:    clientManager,
+	}
+
+	// Set global token provider for claude docker
+	if clientManager != nil {
+		code.SetGlobalTokenProvider(clientManager)
 	}
 
 	// Recover existing workspaces on startup
