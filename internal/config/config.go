@@ -218,7 +218,13 @@ func (c *Config) loadFromEnv() {
 	}
 	// Repository configuration from environment
 	if excludedRepos := os.Getenv("REPOSITORY_EXCLUDED_REPOS"); excludedRepos != "" {
-		c.Repository.ExcludedRepos = strings.Split(excludedRepos, ",")
+		repoList := strings.Split(excludedRepos, ",")
+		c.Repository.ExcludedRepos = make([]string, 0, len(repoList))
+		for _, repo := range repoList {
+			if trimmedRepo := strings.TrimSpace(repo); trimmedRepo != "" {
+				c.Repository.ExcludedRepos = append(c.Repository.ExcludedRepos, trimmedRepo)
+			}
+		}
 	}
 }
 
