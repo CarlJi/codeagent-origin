@@ -109,6 +109,16 @@ func NewEnhancedAgent(cfg *config.Config, workspaceManager *workspace.Manager) (
 	return agent, nil
 }
 
+// isRepositoryExcluded 检查仓库是否在排除列表中
+func (a *EnhancedAgent) isRepositoryExcluded(repoFullName string) bool {
+	for _, excludedRepo := range a.config.Repository.ExcludedRepos {
+		if repoFullName == excludedRepo {
+			return true
+		}
+	}
+	return false
+}
+
 // ProcessGitHubWebhookEvent 处理来自Webhook的GitHub事件（推荐方法）
 func (a *EnhancedAgent) ProcessGitHubWebhookEvent(ctx context.Context, eventType string, deliveryID string, payload []byte) error {
 	xl := xlog.NewWith(ctx)
@@ -129,8 +139,15 @@ func (a *EnhancedAgent) ProcessGitHubWebhookEvent(ctx context.Context, eventType
 func (a *EnhancedAgent) processGitHubContext(ctx context.Context, githubCtx models.GitHubContext, startTime time.Time) error {
 	xl := xlog.NewWith(ctx)
 
+	repoFullName := githubCtx.GetRepository().GetFullName()
 	xl.Infof("Parsed event type: %s for repository: %s",
-		githubCtx.GetEventType(), githubCtx.GetRepository().GetFullName())
+		githubCtx.GetEventType(), repoFullName)
+
+	// 1. 检查仓库是否在排除列表中
+	if a.isRepositoryExcluded(repoFullName) {
+		xl.Infof("repository %s is excluded, ignoring event", repoFullName)
+		return nil
+	}
 
 	// 2. 选择合适的处理器
 	handler, err := a.modeManager.SelectHandler(ctx, githubCtx)

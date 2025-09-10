@@ -27,6 +27,8 @@ type Config struct {
 	Mention MentionConfig `yaml:"mention"`
 	// Review Configuration
 	Review ReviewConfig `yaml:"review"`
+	// Repository Configuration
+	Repository RepositoryConfig `yaml:"repository"`
 }
 
 type GeminiConfig struct {
@@ -92,6 +94,11 @@ type MentionConfig struct {
 type ReviewConfig struct {
 	// 自动审查的排除账号，支持多个
 	ExcludedAccounts []string `yaml:"excluded_accounts"`
+}
+
+type RepositoryConfig struct {
+	// 排除的仓库列表，格式为 owner/repo，支持多个
+	ExcludedRepos []string `yaml:"excluded_repos"`
 }
 
 func Load(configPath string) (*Config, error) {
@@ -209,6 +216,10 @@ func (c *Config) loadFromEnv() {
 	if excludedAccounts := os.Getenv("REVIEW_EXCLUDED_ACCOUNTS"); excludedAccounts != "" {
 		c.Review.ExcludedAccounts = strings.Split(excludedAccounts, ",")
 	}
+	// Repository configuration from environment
+	if excludedRepos := os.Getenv("REPOSITORY_EXCLUDED_REPOS"); excludedRepos != "" {
+		c.Repository.ExcludedRepos = strings.Split(excludedRepos, ",")
+	}
 }
 
 func loadFromEnv() *Config {
@@ -264,6 +275,9 @@ func loadFromEnv() *Config {
 		},
 		Review: ReviewConfig{
 			ExcludedAccounts: []string{},
+		},
+		Repository: RepositoryConfig{
+			ExcludedRepos: []string{},
 		},
 		CodeProvider: getEnvOrDefault("CODE_PROVIDER", "claude"),
 		UseDocker:    getEnvBoolOrDefault("USE_DOCKER", true),

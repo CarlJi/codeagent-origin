@@ -54,3 +54,13 @@ review:
     - "renovate" # Renovate bot
     - "github-actions" # GitHub Actions bot
     - "*-bot" # Pattern to exclude all accounts ending with -bot (optional)
+
+# Repository configuration
+repository:
+  # List of repositories to exclude from processing
+  # Format: owner/repo-name
+  # All events from these repositories will be ignored
+  excluded_repos:
+    - "qbox/example-repo" # Example repository to exclude
+    - "company/internal-tool" # Internal tool repository
+    - "test-org/test-repo" # Test repository

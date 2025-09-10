@@ -80,6 +80,7 @@ func (h *Handler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := reqid.NewContext(context.Background(), traceID)
+
 	// 5. 使用Enhanced Agent的统一事件处理，传递原始字节数据
 	go func(eventType string, payload []byte, deliveryID string, traceCtx context.Context) {
 		traceLog := xlog.NewWith(traceCtx)
