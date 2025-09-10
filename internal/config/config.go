@@ -225,6 +225,12 @@ func (c *Config) loadFromEnv() {
 				c.Repository.ExcludedRepos = append(c.Repository.ExcludedRepos, trimmedRepo)
 			}
 		}
+		c.Repository.ExcludedRepos = make([]string, 0, len(repoList))
+		for _, repo := range repoList {
+			if trimmedRepo := strings.TrimSpace(repo); trimmedRepo != "" {
+				c.Repository.ExcludedRepos = append(c.Repository.ExcludedRepos, trimmedRepo)
+			}
+		}
 	}
 }
 
